@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>video player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="js/jquery.min.js" type="application/x-javascript"></script>
+<script src="js/bootstrap.js" type="application/javascript"></script>
+<script src="js/angular.min.js" type="application/x-javascript"></script>
+
+<style>
+	#outsider{
+		width: 627px;
+		height: 600px;
+		background-color: yellow;
+		padding-top: 10px;
+		float: left;
+	}
+	#insider{
+		width: 588px;
+		height: 440px;
+		background-color: dodgerblue;
+		margin-top: 10px;
+		margin-left: 20px;
+		position: relative;
+	}
+	#like #dislike{
+		display: inline-block;
+	}
+	#play{
+		margin-top: 10px;
+		margin-left: 20px;
+	}
+	#playlist{
+		width: 627px;
+		height: 600px;
+		background-color: yellow;
+		padding-top: 10px;
+		float: left;
+		display: inline-block;
+	}
+	.list{
+		margin-left: 20px;
+	}
+	.play-list{
+	color: #00b050;
+	font-size: 18px;
+	}
+	.play-list li{
+		display: flex;
+		align-items: center;
+		height: 70px;
+		cursor: pointer;
+	}
+	#progressWrap{
+    background-color: #2f75b5;
+    height: 25px;
+    cursor: pointer;
+	}
+	#playProgress{
+	    background-color: red;
+	    width: 0px;
+	    height: 25px;
+	    border-right: 2px solid #2f75b5;
+	}
+	#showProgress{
+	    background-color: ;
+	    font-weight: 600;
+	    font-size: 20px;
+	    line-height: 25px;
+	}
+	@media (min-width: 768px){
+		.right-video-box{
+			margin-top: 20px;
+		}
+	}
+	video{
+		width: 100%;
+		height: 100%;
+		background-size:100% 100%;  
+	}
+	img{
+		width: 60px;
+		height: 60px;
+	}
+	#addUrl{
+		width: 1200px;
+		float: left;
+	}
+	#addV{
+		background-color: cornflowerblue;
+	}
+	#title{
+		background-color: yellow;
+	}
+	#url{
+		background-color: yellow;
+	}
+	.edi{
+		background-color: cornflowerblue;
+	}
+	.del{
+		background-color: cornflowerblue;
+	}
+	.aprv{
+		background-color: cornflowerblue;
+	}	
+</style>
+</head>
+<body>
+<div id="outsider" ng-app="myApp" ng-controller="myCtrl" >
+	<div id="insider">
+		<video id="video">
+		<source src="video/movie.mp4" type="video/mp4">
+	</div>
+	<img src="img/play.png" id="play" ng-click="play()"/>
+	<img src="img/pause.png" id="pause" ng-click="pause()"/>
+	<img src="img/add.png" id="add" ng-click="add()"/>
+	<img src="img/min.png" id="min" ng-click="min()"/>
+	<img src="img/stop.png" id="stop" ng-click="stop"/>
+	<img src="img/listen.png" id="listen" ng-click="listen()"/>
+	<img src="img/like.png" id="likePic" ng-click="likePic()"/>
+	<div id="like" style="display: inline-block">200</div>
+	<img src="img/dislike.png" id="dislikePic"  ng-click="dislikePic()"/>
+	<div id="dislike" style="display: inline-block;" >50</div>
+	<div id="progressWrap">
+        <div id="playProgress">
+            <span id="showProgress"></span>
+        </div>
+	</div>
+</div>
+<div id="playlist">
+	<ul class="play-list">
+		<li id="video1" src="video/movie1.mp4">
+			<img src="img/play.png"/>
+			<p>Introduction to HTML5</p>
+		</li>
+		<li id="video2" src="video/movie.mp4">
+			<img src="img/play.png"/>
+			<p>Introduction to Styling with CSS3</p>
+		</li>
+		<li id="video3" src="video/movie.mp4">
+			<img src="img/play.png"/>
+			<p>Introduction to Bootstrap 4</p>
+		</li>
+		<li id="video4" src="video/movie.mp4">
+			<img src="img/play.png"/>
+			<p>Learn to create website with HTML5, CSS3 and Bootstrap4</p>
+		</li>
+		<li id="video5" src="video/movie.mp4">
+			<img src="img/play.png"/>
+			<p>Introduction to Javascript</p>
+		</li>
+	</ul>
+</div>
+<div id="content">
+<table>
+	<tbody>
+	<tr>
+		<td>Title:</td>
+		<td>
+			<input type="text" id="title"/>
+		</td>
+	</tr>						
+	<tr>
+		<td width="130px">Youtube URL:</td>
+		<td>
+			<input type="url" id="url"/>
+		</td>
+	</tr>
+	<tr>
+		<td></td>
+		<td>
+			<input type="button" value="Add Video" id="addV" onclick="addVideo()"/>
+		</td>
+	</tr>
+	<tr>
+		<td width="130px">S.no</td>
+		<td width="400px">Title</td>
+		<td width="400px">URL</td>
+		<td width="100px">Edit</td>
+		<td width="100px">Delete</td>
+		<td width="100px">Approve</td>
+	</tr>
+	<div style="display: inline-block;" id="add-list">
+	</div>
+	</tbody>
+</table>
+</div>
+		<script>
+			var app = angular.module('myApp',[]);
+			app.controller('myCtrl',function($scope,getProgress,$http,$compile){
+				var video = document.getElementById('video');
+		        var progressWrap = document.getElementById("progressWrap");
+		        var playProgress = document.getElementById("playProgress");
+		        var progressFlag = "";
+				if(sessionStorage.like){
+					$('#like').html(sessionStorage.like);
+				}
+				if(sessionStorage.dislike){
+					$('#dislike').html(sessionStorage.dislike);
+				}
+				video.volume = 0.1;
+				$scope.play = function(){
+					$('#video').trigger('play');
+					progressFlag = setInterval(getProgress.get(), 60);
+				};
+				$scope.pause = function(){
+					$('#video').trigger('pause');
+					clearInterval(progressFlag);
+				};
+				$scope.add = function(){
+					if(video.volume!=1.0){
+						video.volume +=0.1;
+					}					
+				};
+				$scope.min = function(){
+					if(video.volume!=0.0){
+						video.volume -=0.1;
+					}					
+				};
+				$scope.stop = function(){
+					video.autoplay=true;
+					video.load();				
+				};
+				$scope.listen = function(){
+					video.defaultMuted =!video.defaultMuted;
+					if(video.defaultMuted){
+						video.volume =0.0;
+					}else{
+						video.volume =0.5;
+					}					
+				}
+				$scope.likePic = function(){
+					var  aa = Number($('#like').html())+1;
+					$('#like').html(aa);
+					var  like = Number($('#like').html());
+					sessionStorage.setItem("like", like);					
+				};
+				$scope.dislikePic = function(){
+					var  aa = Number($('#dislike').html())-1;
+					if(aa<0){
+						return;
+					}
+					$('#dislike').html(aa);
+					var  nolike = Number($('#dislike').html());
+					sessionStorage.setItem("dislike",nolike);					
+				}
+		
+			    $http({
+			        method: 'GET',
+			        url: 'json/playList.json'
+			    }).then(function successCallback(response) {
+			    		var list = []
+			    		list = response.data.sites
+			            $scope.sites = response.data.sites;
+			            list.forEach(function(item,index){
+			            	var template = "<tr ><td width='136px'>"+index+"</td><td width='400px'>"+item.title+"</td><td width='400px'><a href='%23'>"+item.Url+"</a></td><td width='100px'><input type='button' value='Edit' className='edi'/></td><td width='100px'><input type='button' value='Delete' className='del' onclick='deleterow(this)'/></td><td width='100px'><input type='button' value='Approve' className='aprv'/></td></tr>";
+						         var ele =  $compile(template)($scope);
+						         $("#content").append(
+		                                ele
+		                            );
+						});
+			        }, function errorCallback(response) {
+			        	alert(response);
+			            // 请求失败执行代码
+			    });
+
+			});
+			app.factory('getProgress',function(){
+				var factory = {};
+				factory.get = function(){
+		            var percent = video.currentTime / video.duration;
+		            playProgress.style.width = percent * (progressWrap.offsetWidth) - 2 + "px";
+		//          showProgress.innerHTML = (percent * 100).toFixed(1) + "%";
+			       }					
+				return factory;
+			})
+			// 鼠标在播放条上点击时进行捕获并进行处理
+	        app.service('videoSeek',function(e,playlist){
+	            if(video.paused || video.ended){
+	                playlist();
+	                enhanceVideoSeek(e);
+	            }
+	            else{
+	                enhanceVideoSeek(e);
+	            }	        	
+	        })
+			app.service('enhanceVideoSeek',function(e){
+	            clearInterval(progressFlag);
+	            var length = e.pageX - progressWrap.offsetLeft;
+	            var percent = length / progressWrap.offsetWidth;
+	            playProgress.style.width = percent * (progressWrap.offsetWidth) - 2 + "px";
+	            video.currentTime = percent * video.duration;
+	            progressFlag = setInterval(getProgress, 60);				
+			})
+			app.service('playlist',function(getProgress){
+				$('#video').trigger('play');
+				progressFlag = setInterval(getProgress.get(), 60);				
+			})
+	        $('.play-list').find('li').each(function() {
+	            $(this).click(function() {
+	                console.log(video.currentSrc);
+					var src = $(this).attr("src");
+					video.src=src;
+					video.play();
+	            })
+	        })
+			function addVideo(){
+		    	var title = $("#title").val();
+		    	var urll = $("#url").val();
+				var template = "<tr ><td width='136px'>"+5+"</td><td width='400px'>"+title+"</td><td width='400px'><a href='%23'>"+urll+"</a></td><td width='100px'><input type='button' value='Edit' class='edi'/></td><td width='100px'><input type='button' value='Delete' class='del' onclick='deleterow(this)'/></td><td width='100px'><input type='button' value='Approve' class='aprv'/></td></tr>";
+				$("#content").append(template);
+			}
+			function deleterow(obj){
+				obj.parent().parent().hide();
+			}
+		</script>
+</body>
+</html>
